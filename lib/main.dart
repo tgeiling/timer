@@ -1,125 +1,563 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:neumorphic_ui/neumorphic_ui.dart';
+import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
+
+import 'stats.dart';
+import 'achivements.dart';
+
+import 'sharedFunctions.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+ThemeData themeData = ThemeData(
+  textTheme: TextTheme(
+    bodyText1: GoogleFonts.roboto(),
+  ),
+);
 
-  // This widget is the root of your application.
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      theme: themeData,
+      home: MainScaffold(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class MainScaffold extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MainScaffoldState createState() => _MainScaffoldState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+var _currentIndex = 0;
+List<double> weekValues = [];
+double freetimeDailyGoal = 0;
+double productiveDailyGoal = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class _MainScaffoldState extends State<MainScaffold> {
+  PageController _pageController = PageController();
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: [
+          MainFrame(),
+          Stats(
+            weekValues: weekValues,
+            freetimeDailyGoal: freetimeDailyGoal,
+            productiveDailyGoal: productiveDailyGoal,
+          ),
+          AchievementsPage(),
+          Container(child: Center(child: Text("Profile"))),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+      bottomNavigationBar: SalomonBottomBar(
+        backgroundColor: Colors.grey[100],
+        currentIndex: _currentIndex,
+        onTap: (i) {
+          _pageController.jumpToPage(i);
+        },
+        items: [
+          SalomonBottomBarItem(
+            icon: NeumorphicIcon(
+              Icons.home,
+              size: 40,
+              style: NeumorphicStyle(
+                depth: 2,
+              ),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            title: Text("Timer"),
+            selectedColor: Colors.grey[600],
+          ),
+          SalomonBottomBarItem(
+            icon: NeumorphicIcon(
+              Icons.bar_chart_sharp,
+              size: 40,
+              style: NeumorphicStyle(
+                depth: 2,
+              ),
             ),
-          ],
-        ),
+            title: Text("Stats"),
+            selectedColor: Colors.pink[600],
+          ),
+          SalomonBottomBarItem(
+            icon: NeumorphicIcon(
+              Icons.star,
+              size: 40,
+              style: NeumorphicStyle(
+                depth: 2,
+              ),
+            ),
+            title: Text("Achievements"),
+            selectedColor: Colors.grey[600],
+          ),
+          SalomonBottomBarItem(
+            icon: NeumorphicIcon(
+              Icons.person,
+              size: 40,
+              style: NeumorphicStyle(
+                depth: 2,
+              ),
+            ),
+            title: Text("Comming Soon"),
+            selectedColor: Colors.grey[600],
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+}
+
+class MainFrame extends StatefulWidget {
+  @override
+  _MainFrameState createState() => _MainFrameState();
+}
+
+class _MainFrameState extends State<MainFrame>
+    with AutomaticKeepAliveClientMixin {
+  late Timer _freeTimeInterval;
+  late Timer _productiveInterval;
+
+  String _activeMode = "freeTime";
+  late int _freeTimeTotalSeconds;
+  late int _productiveTimeTotalSeconds;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedValues();
+    _resetTimers();
+  }
+
+  void _updateTime(int hours, int minutes, int seconds) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (_currentIndex == 0) {
+      setState(() {
+        if (_activeMode == "freeTime" ||
+            (hours == 0 && minutes == 0 && seconds == 0)) {
+          freeTimeHours = hours.toString().padLeft(2, "0");
+          freeTimeMinutes = minutes.toString().padLeft(2, "0");
+          freeTimeSeconds = seconds.toString().padLeft(2, "0");
+
+          // Save the values to SharedPreferences
+          prefs.setString('freeTimeHours', freeTimeHours);
+          prefs.setString('freeTimeMinutes', freeTimeMinutes);
+          prefs.setString('freeTimeSeconds', freeTimeSeconds);
+
+          _freeTimeTotalSeconds = getTotalSecondsFromTime(
+            hours: freeTimeHours,
+            minutes: freeTimeMinutes,
+            seconds: freeTimeSeconds,
+          );
+
+          prefs.setInt('freeTimeTotalSeconds', _freeTimeTotalSeconds);
+        }
+
+        if (_activeMode == "productive" ||
+            (hours == 0 && minutes == 0 && seconds == 0)) {
+          productiveHours = hours.toString().padLeft(2, "0");
+          productiveMinutes = minutes.toString().padLeft(2, "0");
+          productiveSeconds = seconds.toString().padLeft(2, "0");
+
+          // Save the values to SharedPreferences
+          prefs.setString('productiveHours', productiveHours);
+          prefs.setString('productiveMinutes', productiveMinutes);
+          prefs.setString('productiveSeconds', productiveSeconds);
+
+          _productiveTimeTotalSeconds = getTotalSecondsFromTime(
+            hours: productiveHours,
+            minutes: productiveMinutes,
+            seconds: productiveSeconds,
+          );
+
+          prefs.setInt(
+              'productiveTimeTotalSeconds', _productiveTimeTotalSeconds);
+        }
+      });
+    } else {
+      if (_activeMode == "freeTime" ||
+          (hours == 0 && minutes == 0 && seconds == 0)) {
+        freeTimeHours = hours.toString().padLeft(2, "0");
+        freeTimeMinutes = minutes.toString().padLeft(2, "0");
+        freeTimeSeconds = seconds.toString().padLeft(2, "0");
+
+        // Save the values to SharedPreferences
+        prefs.setString('freeTimeHours', freeTimeHours);
+        prefs.setString('freeTimeMinutes', freeTimeMinutes);
+        prefs.setString('freeTimeSeconds', freeTimeSeconds);
+
+        _freeTimeTotalSeconds = getTotalSecondsFromTime(
+          hours: freeTimeHours,
+          minutes: freeTimeMinutes,
+          seconds: freeTimeSeconds,
+        );
+
+        prefs.setInt('freeTimeTotalSeconds', _freeTimeTotalSeconds);
+      }
+
+      if (_activeMode == "productive" ||
+          (hours == 0 && minutes == 0 && seconds == 0)) {
+        productiveHours = hours.toString().padLeft(2, "0");
+        productiveMinutes = minutes.toString().padLeft(2, "0");
+        productiveSeconds = seconds.toString().padLeft(2, "0");
+
+        // Save the values to SharedPreferences
+        prefs.setString('productiveHours', productiveHours);
+        prefs.setString('productiveMinutes', productiveMinutes);
+        prefs.setString('productiveSeconds', productiveSeconds);
+
+        _productiveTimeTotalSeconds = getTotalSecondsFromTime(
+          hours: productiveHours,
+          minutes: productiveMinutes,
+          seconds: productiveSeconds,
+        );
+
+        prefs.setInt('productiveTimeTotalSeconds', _productiveTimeTotalSeconds);
+      }
+    }
+
+    _saveCurrentDayData();
+  }
+
+  void _loadSavedValues() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      freeTimeHours = prefs.getString('freeTimeHours') ?? '00';
+      freeTimeMinutes = prefs.getString('freeTimeMinutes') ?? '00';
+      freeTimeSeconds = prefs.getString('freeTimeSeconds') ?? '00';
+
+      productiveHours = prefs.getString('productiveHours') ?? '00';
+      productiveMinutes = prefs.getString('productiveMinutes') ?? '00';
+      productiveSeconds = prefs.getString('productiveSeconds') ?? '00';
+
+      _freeTimeTotalSeconds = prefs.getInt('freeTimeTotalSeconds') ?? 0;
+      _productiveTimeTotalSeconds =
+          prefs.getInt('productiveTimeTotalSeconds') ?? 0;
+      freetimeDailyGoal = prefs.getDouble('freetimeDailyGoal') ?? 0;
+      productiveDailyGoal = prefs.getDouble('productiveDailyGoal') ?? 0;
+
+      weekValues = weekValues;
+    });
+    freetimeDailyGoal = await prefs.getDouble('freetimeDailyGoal') ?? 0;
+    productiveDailyGoal = await prefs.getDouble('productiveDailyGoal') ?? 0;
+    weekValues =
+        await calculateWeeklyProgress(productiveDailyGoal, "productive");
+    setState(() {});
+  }
+
+  void _saveCurrentDayData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int currentDayOfWeek = DateTime.now().weekday; // 1 = Monday, 7 = Sunday
+    List<String> daysOfWeek = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+
+    String freeTimeKey =
+        'currentDayFreeTime' + daysOfWeek[currentDayOfWeek - 1];
+    String productiveTimeKey =
+        'currentDayProductiveTime' + daysOfWeek[currentDayOfWeek - 1];
+
+    // Fetch the current total seconds and increment by 1 for each type
+    int currentFreeTimeSeconds = (prefs.getInt(freeTimeKey) ?? 0) + 1;
+    int currentProductiveTimeSeconds =
+        (prefs.getInt(productiveTimeKey) ?? 0) + 1;
+
+    DateTime now = DateTime.now();
+    String lastResetDateKey = "lastResetDate";
+    String? lastResetDateString = await prefs.getString(lastResetDateKey);
+    DateTime lastResetDate = lastResetDateString != null
+        ? DateTime.parse(lastResetDateString)
+        : DateTime.now().subtract(Duration(days: 1)); // Default to yesterday
+
+    // Compare the last reset date to the current date
+    if (now.year > lastResetDate.year ||
+        now.month > lastResetDate.month ||
+        now.day > lastResetDate.day) {
+      // It's a new day, reset the counters
+      await prefs.setInt(freeTimeKey, 0);
+      await prefs.setInt(productiveTimeKey, 0);
+      // Update the last reset date to today
+      await prefs.setString(lastResetDateKey, now.toIso8601String());
+    } else {
+      // Save the updated seconds back to SharedPreferences
+      if (_activeMode == "freeTime") {
+        await prefs.setInt(freeTimeKey, currentFreeTimeSeconds);
+      } else {
+        await prefs.setInt(productiveTimeKey, currentProductiveTimeSeconds);
+      }
+    }
+
+    // Temporary print for debugging - shows the seconds value for every weekday
+    print("########## Total Seconds for Each Day ##########");
+    for (String day in daysOfWeek) {
+      String tempFreeKey = 'currentDayFreeTime' + day;
+      String tempProdKey = 'currentDayProductiveTime' + day;
+      int freeSeconds = prefs.getInt(tempFreeKey) ?? 0;
+      int prodSeconds = prefs.getInt(tempProdKey) ?? 0;
+      print(
+          "$day - Free Time: $freeSeconds seconds, Productive Time: $prodSeconds seconds");
+    }
+  }
+
+  int getTotalSecondsFromTime(
+      {required String hours,
+      required String minutes,
+      required String seconds}) {
+    int hoursInSeconds = int.parse(hours) * 3600; // 3600 seconds in an hour
+    int minutesInSeconds = int.parse(minutes) * 60; // 60 seconds in a minute
+    int secondsAsInt =
+        int.parse(seconds); // seconds are already in the correct unit
+
+    return hoursInSeconds + minutesInSeconds + secondsAsInt;
+  }
+
+  void _printLabel(String mode) {
+    setState(() {
+      label = mode;
+    });
+  }
+
+  void _start() {
+    if (_activeMode == "freeTime") {
+      if (_freeTimeInterval != null && _freeTimeInterval.isActive) {
+        return;
+      }
+      _freeTimeInterval = Timer.periodic(Duration(seconds: 1), _stopWatch);
+    } else if (_activeMode == "productive") {
+      if (_productiveInterval != null && _productiveInterval.isActive) {
+        return;
+      }
+      _productiveInterval = Timer.periodic(Duration(seconds: 1), _stopWatch);
+    }
+  }
+
+  void _stop() {
+    if (_activeMode == "freeTime") {
+      _freeTimeInterval.cancel();
+    } else if (_activeMode == "productive") {
+      _productiveInterval.cancel();
+    }
+  }
+
+  void _reset() {
+    _freeTimeInterval.cancel();
+    _productiveInterval.cancel();
+    _freeTimeTotalSeconds = 0;
+    _productiveTimeTotalSeconds = 0;
+    _updateTime(0, 0, 0);
+  }
+
+  void _resetTimers() {
+    _freeTimeInterval = Timer.periodic(Duration(seconds: 1), _stopWatch);
+    _productiveInterval = Timer.periodic(Duration(seconds: 1), _stopWatch);
+    _freeTimeInterval.cancel();
+    _productiveInterval.cancel();
+  }
+
+  void _switchTime() {
+    _stop();
+
+    if (_activeMode == "freeTime") {
+      setState(() {
+        _activeMode = "productive";
+      });
+    } else if (_activeMode == "productive") {
+      setState(() {
+        _activeMode = "freeTime";
+      });
+    }
+
+    _printLabel(_activeMode);
+    _start();
+  }
+
+  void _stopWatch(Timer timer) {
+    late int counter; // Provide an initial value
+    if (_activeMode == "freeTime") {
+      print(_freeTimeTotalSeconds);
+      counter = ++_freeTimeTotalSeconds;
+    } else if (_activeMode == "productive") {
+      print(_productiveTimeTotalSeconds);
+      counter = ++_productiveTimeTotalSeconds;
+    }
+
+    int hours = counter ~/ 3600;
+    int minutes = (counter ~/ 60) % 60;
+    int seconds = counter % 60;
+
+    _updateTime(hours, minutes, seconds);
+  }
+
+  String label = "freeTime";
+  String freeTimeHours = "00";
+  String freeTimeMinutes = "00";
+  String freeTimeSeconds = "00";
+  String productiveHours = "00";
+  String productiveMinutes = "00";
+  String productiveSeconds = "00";
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Padding(
+      padding: EdgeInsets.only(top: 50),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 72, fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+          SizedBox(height: 20),
+          _buildTimer(
+            "Free Time",
+            freeTimeHours,
+            freeTimeMinutes,
+            freeTimeSeconds,
+          ),
+          SizedBox(height: 20),
+          _buildTimer(
+            "Productive Time",
+            productiveHours,
+            productiveMinutes,
+            productiveSeconds,
+          ),
+          SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildIconButton(Icons.sync, _switchTime),
+              _buildIconButton(Icons.play_arrow, _start),
+              _buildIconButton(Icons.stop, _stop),
+              _buildIconButton(Icons.delete, _reset),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimer(
+    String label,
+    String hours,
+    String minutes,
+    String seconds,
+  ) {
+    return Column(
+      children: [
+        SizedBox(height: 10),
+        Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildTimeSpan(hours),
+              Text(
+                ":",
+                style: TextStyle(color: Colors.grey[800], fontSize: 70),
+              ),
+              _buildTimeSpan(minutes),
+              Text(":", style: TextStyle(fontSize: 70)),
+              _buildTimeSpan(seconds),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _buildTimeSpan(String value) {
+    return Neumorphic(
+      padding: EdgeInsets.all(12),
+      style: NeumorphicStyle(
+        shape: NeumorphicShape.concave,
+        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
+        depth: 8,
+        lightSource: LightSource.topLeft,
+      ),
+      child: Text(
+        value,
+        style: TextStyle(color: Colors.grey[500], fontSize: 72),
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, Function() onPressed) {
+    if (Icons.sync == icon) {
+      return TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          primary: Colors.black,
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        ),
+        child: NeumorphicIcon(
+          icon,
+          size: 60,
+          style: NeumorphicStyle(
+            color: Colors.blue,
+            depth: 2,
+          ),
+        ),
+      );
+    }
+
+    if (Icons.delete == icon) {
+      return TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          primary: Colors.black,
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        ),
+        child: NeumorphicIcon(
+          icon,
+          size: 60,
+          style: NeumorphicStyle(
+            color: Colors.grey[400],
+            depth: 2,
+          ),
+        ),
+      );
+    }
+
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        primary: Colors.black,
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      ),
+      child: NeumorphicIcon(
+        icon,
+        size: 60,
+        style: NeumorphicStyle(
+          depth: 2,
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }
