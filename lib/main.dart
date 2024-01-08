@@ -513,10 +513,10 @@ class _MainFrameState extends State<MainFrame>
               _buildTimeSpan(hours),
               Text(
                 ":",
-                style: TextStyle(color: Colors.grey[800], fontSize: 60),
+                style: TextStyle(color: Colors.grey[800], fontSize: 65),
               ),
               _buildTimeSpan(minutes),
-              Text(":", style: TextStyle(fontSize: 60)),
+              Text(":", style: TextStyle(fontSize: 65)),
               _buildTimeSpan(seconds),
             ],
           ),
@@ -527,7 +527,7 @@ class _MainFrameState extends State<MainFrame>
 
   Widget _buildTimeSpan(String value) {
     return Neumorphic(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(10),
       style: NeumorphicStyle(
         shape: NeumorphicShape.concave,
         boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
@@ -547,7 +547,7 @@ class _MainFrameState extends State<MainFrame>
         onPressed: onPressed,
         style: TextButton.styleFrom(
           primary: Colors.black,
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         ),
         child: NeumorphicIcon(
           icon,
