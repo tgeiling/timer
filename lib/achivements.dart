@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:neumorphic_ui/neumorphic_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timer/sharedFunctions.dart';
+import 'package:timer/stats.dart';
 
 Map<String, String> achievementKeys = {
+  'Reach 10 productive hours total': 'achievement_ten_total_hours',
+  'Reach 100 productive hours total': 'achievement_hundret_total_hours',
+  'Reach 1000 productive hours total': 'achievement_thousand_total_hours',
   'Reach 2 productive hours average': 'achievement_two_hours',
   'Reach 4 productive hours average': 'achievement_four_hours',
   'Reach 6 productive hours average': 'achievement_six_hours',
@@ -16,18 +21,22 @@ Map<String, String> achievementKeys = {
 };
 
 class Achievement {
+  String header;
   String title;
-  IconData icon;
+  String imageAsset;
   int maximumValue;
   double alreadyDone;
   int decimalPoints;
+  DateTime? completionDate;
 
   Achievement({
+    required this.header,
     required this.title,
-    this.icon = Icons.emoji_events,
+    required this.imageAsset,
     required this.maximumValue,
     this.alreadyDone = 0.0,
     required this.decimalPoints,
+    this.completionDate,
   });
 
   double get progressPercentage => alreadyDone / maximumValue;
@@ -38,48 +47,79 @@ class AchievementsPage extends StatefulWidget {
   _AchievementsPageState createState() => _AchievementsPageState();
 }
 
-class _AchievementsPageState extends State<AchievementsPage> {
+class _AchievementsPageState extends State<AchievementsPage>
+    with AutomaticKeepAliveClientMixin {
   late List<Achievement> achievements;
   late Timer timer;
 
   @override
   void initState() {
     super.initState();
-    // Initialize achievements here or fetch them from a database or SharedPreferences
+    loadAchievements();
+    timer = Timer.periodic(
+        Duration(seconds: 30), (Timer t) => updateAchievementProgress());
+  }
+
+  Future<void> loadAchievements() async {
     achievements = [
       Achievement(
+          header: 'Baby Steps',
+          title: 'Reach 10 productive hours total',
+          imageAsset: 'assets/reach10total.png',
+          maximumValue: 10,
+          decimalPoints: 2),
+      Achievement(
+          header: 'Still nothing',
+          title: 'Reach 100 productive hours total',
+          imageAsset: 'assets/reach100total.png',
+          maximumValue: 100,
+          decimalPoints: 2),
+      Achievement(
+          header: 'Warmer',
+          title: 'Reach 1000 productive hours total',
+          imageAsset: 'assets/reach1000total.png',
+          maximumValue: 1000,
+          decimalPoints: 2),
+      Achievement(
+          header: 'Procrastinator',
           title: 'Reach 2 productive hours average',
-          icon: Icons.check_circle_outline,
+          imageAsset: 'assets/reach2avg.png',
           maximumValue: 2,
           decimalPoints: 2),
       Achievement(
+          header: 'Equal too part-time work',
           title: 'Reach 4 productive hours average',
-          icon: Icons.emoji_events,
+          imageAsset: 'assets/reach4avg.png',
           maximumValue: 4,
           decimalPoints: 2),
       Achievement(
+          header: 'Padawan',
           title: 'Reach 6 productive hours average',
-          icon: Icons.monetization_on,
+          imageAsset: 'assets/reach6avg.png',
           maximumValue: 6,
           decimalPoints: 2),
       Achievement(
+          header: 'Monk',
           title: 'Track everyday of the Week',
-          icon: Icons.directions_walk,
+          imageAsset: 'assets/reach7TrackedDay.png',
           maximumValue: 7,
           decimalPoints: 0),
       Achievement(
+          header: 'First Blood',
           title: 'Reach your productive Goal once',
-          icon: Icons.directions_run,
+          imageAsset: 'assets/reach1goal.png',
           maximumValue: 1,
           decimalPoints: 0),
       Achievement(
+          header: "App Enjoyer",
           title: 'Reach your productive goal 10 times',
-          icon: Icons.book,
+          imageAsset: 'assets/reach10goal.png',
           maximumValue: 10,
           decimalPoints: 0),
       Achievement(
+          header: "Phonk Enjoyer",
           title: 'Reach your productive goal 100 times',
-          icon: Icons.nature,
+          imageAsset: 'assets/reach100goal.png',
           maximumValue: 100,
           decimalPoints: 0),
     ];
@@ -103,6 +143,15 @@ class _AchievementsPageState extends State<AchievementsPage> {
         await prefs.getDouble('productiveDailyGoal') ?? 0.0;
     double freetimeDailyGoal =
         await prefs.getDouble('freetimeDailyGoal') ?? 0.0;
+
+    for (Achievement achievement in achievements) {
+      String? completionDateString =
+          prefs.getString('${achievement.title}_completionDate');
+      if (completionDateString != null) {
+        DateTime completionDate = DateTime.parse(completionDateString);
+        achievement.completionDate = completionDate;
+      }
+    }
 
     // You'd fetch and sum this from SharedPreferences for total productive time
     double totalProductiveTime = 0;
@@ -136,8 +185,19 @@ class _AchievementsPageState extends State<AchievementsPage> {
           "productiveGoalLastUpdate", currentDate.millisecondsSinceEpoch);
     }
 
+    double productiveDaysPercentage = await calculateProductiveDaysPercentage();
+
     for (Achievement achievement in achievements) {
       switch (achievement.title) {
+        case 'Reach 10 productive hours total':
+          achievement.alreadyDone = totalProductiveHours;
+          break;
+        case 'Reach 100 productive hours total':
+          achievement.alreadyDone = totalProductiveHours;
+          break;
+        case 'Reach 1000 productive hours total':
+          achievement.alreadyDone = totalProductiveHours;
+          break;
         case 'Reach 2 productive hours average':
           achievement.alreadyDone = min(2, averageProductiveHours);
           break;
@@ -148,8 +208,7 @@ class _AchievementsPageState extends State<AchievementsPage> {
           achievement.alreadyDone = min(6, averageProductiveHours);
           break;
         case 'Track everyday of the Week':
-          achievement.alreadyDone =
-              await checkIfAllDaysHaveProductiveTime() ? 1.0 : 0.0;
+          achievement.alreadyDone = productiveDaysPercentage;
           break;
         case 'Reach your productive Goal once':
           achievement.alreadyDone = productiveGoalHitCounter / 1;
@@ -164,6 +223,18 @@ class _AchievementsPageState extends State<AchievementsPage> {
           break;
       }
 
+      for (Achievement achievement in achievements) {
+        if (achievement.progressPercentage >= 1.0 &&
+            achievement.completionDate == null) {
+          achievement.completionDate = DateTime.now();
+
+          String completionDateString =
+              achievement.completionDate!.toIso8601String();
+          await prefs.setString(
+              '${achievement.title}_completionDate', completionDateString);
+        }
+      }
+
       // Save updated progress in SharedPreferences
       String key = achievementKeys[achievement.title] ?? 'default_key';
       await prefs.setDouble(key, achievement.progressPercentage);
@@ -175,17 +246,28 @@ class _AchievementsPageState extends State<AchievementsPage> {
 
   @override
   Widget build(BuildContext context) {
+    int numberOfAchieved =
+        achievements.where((a) => a.progressPercentage >= 1.0).length;
+
     return Scaffold(
       body: Center(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize:
+              MainAxisSize.min, // Ensures column takes up only required space
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 70.0, 8.0, 20.0),
+              padding: const EdgeInsets.fromLTRB(8.0, 90.0, 8.0, 20.0),
               child: Text(
                 'Achievements',
+                textAlign: TextAlign.center, // Center align the text
                 style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
               ),
+            ),
+            Text(
+              "$numberOfAchieved/${achievements.length}", // Display achieved/total achievements
+              style:
+                  TextStyle(fontSize: 24, color: Colors.grey), // Style the text
+              textAlign: TextAlign.center, // Center align the text
             ),
             Expanded(
               child: ListView.builder(
@@ -200,6 +282,9 @@ class _AchievementsPageState extends State<AchievementsPage> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class NeumorphicListItem extends StatefulWidget {
@@ -221,13 +306,9 @@ class _NeumorphicListItemState extends State<NeumorphicListItem>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
+        duration: const Duration(milliseconds: 500), vsync: this);
     _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.fastOutSlowIn,
-    );
+        parent: _animationController, curve: Curves.fastOutSlowIn);
   }
 
   @override
@@ -265,10 +346,17 @@ class _NeumorphicListItemState extends State<NeumorphicListItem>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Text(
-                    widget.achievement.title,
+                    widget.achievement.header,
                     style: TextStyle(fontSize: 18),
                   ),
-                  Icon(widget.achievement.icon, color: Colors.grey[700]),
+                  Container(
+                      width: 40, // Width constraint
+                      height: 40, // Height constraint
+                      child: Image.asset(
+                        widget.achievement.imageAsset,
+                        fit: BoxFit
+                            .contain, // Ensures the image is contained within the widget's bounds
+                      ))
                 ],
               ),
             ),
@@ -280,9 +368,19 @@ class _NeumorphicListItemState extends State<NeumorphicListItem>
               child: Column(
                 children: [
                   Text(
+                    widget.achievement.title,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
                     '${widget.achievement.alreadyDone.toStringAsFixed(widget.achievement.decimalPoints)}/${widget.achievement.maximumValue}',
                     style: TextStyle(fontSize: 16),
                   ),
+                  if (widget.achievement.completionDate != null)
+                    Text(
+                      'Completed on: ${DateFormat('dd.MM.yyyy').format(widget.achievement.completionDate!)}',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   SizedBox(height: 8),
                   NeumorphicProgress(
                     percent: widget.achievement.progressPercentage,

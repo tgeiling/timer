@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 0.0.1
 
 environment:
-  sdk: '>=3.1.4 <4.0.0'
+  sdk: '>=3.2.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -15,6 +15,8 @@ dependencies:
   neumorphic_ui: ^1.0.1
   salomon_bottom_bar: ^3.3.2
   percent_indicator: ^4.2.3
+  fl_chart: ^0.66.0
+  intl: ^0.17.0
 
 dev_dependencies:
   flutter_test:
@@ -34,6 +36,18 @@ flutter:
   uses-material-design: true
   assets:
     - assets/digi.ttf
+    - assets/campfire1.png
+    - assets/campfire2.png
+    - assets/reach10total.png
+    - assets/reach100total.png
+    - assets/reach1000total.png
+    - assets/reach2avg.png
+    - assets/reach4avg.png
+    - assets/reach6avg.png
+    - assets/reach7TrackedDay.png
+    - assets/reach1goal.png
+    - assets/reach10goal.png
+    - assets/reach100goal.png
   fonts:
     - family: digi
       fonts:

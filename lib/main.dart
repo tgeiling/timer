@@ -63,7 +63,7 @@ class _MainScaffoldState extends State<MainScaffold> {
             productiveDailyGoal: productiveDailyGoal,
           ),
           AchievementsPage(),
-          Container(child: Center(child: Text("Profile"))),
+          Container(child: Center(child: Text("Comming Soon"))),
         ],
       ),
       bottomNavigationBar: SalomonBottomBar(
@@ -77,9 +77,7 @@ class _MainScaffoldState extends State<MainScaffold> {
             icon: NeumorphicIcon(
               Icons.home,
               size: 40,
-              style: NeumorphicStyle(
-                depth: 2,
-              ),
+              style: NeumorphicStyle(depth: 2, color: Colors.grey.shade400),
             ),
             title: Text("Timer"),
             selectedColor: Colors.grey[600],
@@ -88,20 +86,16 @@ class _MainScaffoldState extends State<MainScaffold> {
             icon: NeumorphicIcon(
               Icons.bar_chart_sharp,
               size: 40,
-              style: NeumorphicStyle(
-                depth: 2,
-              ),
+              style: NeumorphicStyle(depth: 2, color: Colors.grey.shade400),
             ),
             title: Text("Stats"),
-            selectedColor: Colors.pink[600],
+            selectedColor: Colors.grey[600],
           ),
           SalomonBottomBarItem(
             icon: NeumorphicIcon(
               Icons.star,
               size: 40,
-              style: NeumorphicStyle(
-                depth: 2,
-              ),
+              style: NeumorphicStyle(depth: 2, color: Colors.grey.shade400),
             ),
             title: Text("Achievements"),
             selectedColor: Colors.grey[600],
@@ -110,11 +104,9 @@ class _MainScaffoldState extends State<MainScaffold> {
             icon: NeumorphicIcon(
               Icons.person,
               size: 40,
-              style: NeumorphicStyle(
-                depth: 2,
-              ),
+              style: NeumorphicStyle(depth: 2, color: Colors.grey.shade400),
             ),
-            title: Text("Comming Soon"),
+            title: Text("Profile"),
             selectedColor: Colors.grey[600],
           ),
         ],
@@ -284,6 +276,12 @@ class _MainFrameState extends State<MainFrame>
     int currentFreeTimeSeconds = (prefs.getInt(freeTimeKey) ?? 0) + 1;
     int currentProductiveTimeSeconds =
         (prefs.getInt(productiveTimeKey) ?? 0) + 1;
+    int totalFreeTimeSeconds = (prefs.getInt("totalFreeTimeSeconds") ?? 0) + 1;
+    int totalProductiveTimeSeconds =
+        (prefs.getInt("totalProductiveTimeSeconds") ?? 0) + 1;
+
+    int maximumProductiveSeconds =
+        prefs.getInt("maximumProductiveSeconds") ?? 0;
 
     DateTime now = DateTime.now();
     String lastResetDateKey = "lastResetDate";
@@ -301,17 +299,53 @@ class _MainFrameState extends State<MainFrame>
       await prefs.setInt(productiveTimeKey, 0);
       // Update the last reset date to today
       await prefs.setString(lastResetDateKey, now.toIso8601String());
+      if (totalProductiveTimeSeconds > maximumProductiveSeconds) {
+        await prefs.setInt(
+            "maximumProductiveSeconds", totalProductiveTimeSeconds);
+      }
     } else {
       // Save the updated seconds back to SharedPreferences
       if (_activeMode == "freeTime") {
         await prefs.setInt(freeTimeKey, currentFreeTimeSeconds);
+        await prefs.setInt("totalFreeTimeSeconds", totalFreeTimeSeconds);
       } else {
         await prefs.setInt(productiveTimeKey, currentProductiveTimeSeconds);
+        await prefs.setInt(
+            "totalProductiveTimeSeconds", totalProductiveTimeSeconds);
       }
+    }
+
+    int currentKW = getIsoWeekNumber(DateTime.now());
+    int lastSavedKW = prefs.getInt("lastSavedKW") ?? currentKW;
+
+    // If it's a new week, save the last week's data
+    if (currentKW != lastSavedKW) {
+      for (String day in daysOfWeek) {
+        String freeTimeKey = 'currentDayFreeTime' + day;
+        String productiveTimeKey = 'currentDayProductiveTime' + day;
+
+        int freeTimeSeconds = prefs.getInt(freeTimeKey) ?? 0;
+        int productiveTimeSeconds = prefs.getInt(productiveTimeKey) ?? 0;
+
+        print('KW$lastSavedKW$freeTimeKey');
+        print(freeTimeSeconds);
+        print('KW$lastSavedKW$productiveTimeKey');
+        print(productiveTimeSeconds);
+
+        // Save last week's data with a KW mark
+        await prefs.setInt('KW$lastSavedKW$freeTimeKey', freeTimeSeconds);
+        await prefs.setInt(
+            'KW$lastSavedKW$productiveTimeKey', productiveTimeSeconds);
+      }
+
+      // Save the new KW mark
+      await prefs.setInt("lastSavedKW", currentKW);
     }
 
     // Temporary print for debugging - shows the seconds value for every weekday
     print("########## Total Seconds for Each Day ##########");
+    print("Total Seconds productive: $totalProductiveTimeSeconds");
+    print("Total Seconds productive: $totalFreeTimeSeconds");
     for (String day in daysOfWeek) {
       String tempFreeKey = 'currentDayFreeTime' + day;
       String tempProdKey = 'currentDayProductiveTime' + day;
@@ -430,7 +464,9 @@ class _MainFrameState extends State<MainFrame>
           Text(
             label,
             style: TextStyle(
-                fontSize: 72, fontWeight: FontWeight.bold, color: Colors.black),
+                fontSize: 60,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade500),
           ),
           SizedBox(height: 20),
           _buildTimer(
@@ -477,10 +513,10 @@ class _MainFrameState extends State<MainFrame>
               _buildTimeSpan(hours),
               Text(
                 ":",
-                style: TextStyle(color: Colors.grey[800], fontSize: 70),
+                style: TextStyle(color: Colors.grey[800], fontSize: 65),
               ),
               _buildTimeSpan(minutes),
-              Text(":", style: TextStyle(fontSize: 70)),
+              Text(":", style: TextStyle(fontSize: 65)),
               _buildTimeSpan(seconds),
             ],
           ),

@@ -12,10 +12,10 @@ if (localPropertiesFile.exists()) {
     }
 }
 
-def flutterVersionCode = '4'
+def flutterVersionCode = '5'
 
 
-def flutterVersionName = '4.0'
+def flutterVersionName = '5.0'
 
 android {
     namespace "com.tgeiling.timer"
