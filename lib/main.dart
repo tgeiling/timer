@@ -97,7 +97,7 @@ class _MainScaffoldState extends State<MainScaffold> {
               size: 40,
               style: NeumorphicStyle(depth: 2, color: Colors.grey.shade400),
             ),
-            title: Text("Achievements"),
+            title: Text("Ach."),
             selectedColor: Colors.grey[600],
           ),
           SalomonBottomBarItem(
@@ -513,10 +513,10 @@ class _MainFrameState extends State<MainFrame>
               _buildTimeSpan(hours),
               Text(
                 ":",
-                style: TextStyle(color: Colors.grey[800], fontSize: 65),
+                style: TextStyle(color: Colors.grey[800], fontSize: 60),
               ),
               _buildTimeSpan(minutes),
-              Text(":", style: TextStyle(fontSize: 65)),
+              Text(":", style: TextStyle(fontSize: 60)),
               _buildTimeSpan(seconds),
             ],
           ),
@@ -551,7 +551,7 @@ class _MainFrameState extends State<MainFrame>
         ),
         child: NeumorphicIcon(
           icon,
-          size: 60,
+          size: 52,
           style: NeumorphicStyle(
             color: Colors.blue,
             depth: 2,

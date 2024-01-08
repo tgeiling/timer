@@ -232,7 +232,7 @@ class _StatsState extends State<Stats> with AutomaticKeepAliveClientMixin {
                       Row(
                         children: [
                           Text(
-                            'Weekly performance',
+                            'Weekly %',
                             style: TextStyle(
                               color: Colors.grey,
                               fontSize: 24,
@@ -287,7 +287,7 @@ class _StatsState extends State<Stats> with AutomaticKeepAliveClientMixin {
                     Row(
                       children: [
                         Text(
-                          'Weekly performance',
+                          'Weekly %',
                           style: TextStyle(
                             color: Colors.grey,
                             fontSize: 24,
@@ -346,7 +346,7 @@ class _StatsState extends State<Stats> with AutomaticKeepAliveClientMixin {
                     Row(
                       children: [
                         Text(
-                          'Weekly performance',
+                          'Weekly %',
                           style: TextStyle(
                             color: Colors.grey,
                             fontSize: 24,
@@ -400,7 +400,7 @@ class _StatsState extends State<Stats> with AutomaticKeepAliveClientMixin {
                   Row(
                     children: [
                       Text(
-                        'Weekly performance',
+                        'Weekly %',
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 24,
