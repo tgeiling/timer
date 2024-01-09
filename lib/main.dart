@@ -452,9 +452,11 @@ class _MainFrameState extends State<MainFrame>
     if (state == AppLifecycleState.paused) {
       // Save the current time when the app is paused
       _saveCurrentTime();
+      _stop();
     } else if (state == AppLifecycleState.resumed) {
       // Calculate the elapsed time and update the timer when the app is resumed
       _updateTimerOnResume();
+      _start();
     }
   }
 
