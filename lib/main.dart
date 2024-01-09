@@ -576,11 +576,14 @@ class _MainFrameState extends State<MainFrame>
           lightSource: LightSource.topLeft,
         ),
         child: Container(
-            width: 90,
+            width: 92,
             child: Center(
               child: Text(
                 value,
-                style: TextStyle(color: Colors.grey[500], fontSize: 72),
+                style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 72,
+                    fontWeight: FontWeight.normal),
               ),
             )));
   }
