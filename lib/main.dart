@@ -121,7 +121,7 @@ class MainFrame extends StatefulWidget {
 }
 
 class _MainFrameState extends State<MainFrame>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   late Timer _freeTimeInterval;
   late Timer _productiveInterval;
 
@@ -134,6 +134,7 @@ class _MainFrameState extends State<MainFrame>
     super.initState();
     _loadSavedValues();
     _resetTimers();
+    WidgetsBinding.instance.addObserver(this);
   }
 
   void _updateTime(int hours, int minutes, int seconds) async {
@@ -445,6 +446,43 @@ class _MainFrameState extends State<MainFrame>
     _updateTime(hours, minutes, seconds);
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused) {
+      // Save the current time when the app is paused
+      _saveCurrentTime();
+    } else if (state == AppLifecycleState.resumed) {
+      // Calculate the elapsed time and update the timer when the app is resumed
+      _updateTimerOnResume();
+    }
+  }
+
+  void _saveCurrentTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt('lastPauseTime', DateTime.now().millisecondsSinceEpoch);
+  }
+
+  void _updateTimerOnResume() async {
+    final prefs = await SharedPreferences.getInstance();
+    int lastPauseTime =
+        prefs.getInt('lastPauseTime') ?? DateTime.now().millisecondsSinceEpoch;
+    int currentTime = DateTime.now().millisecondsSinceEpoch;
+    int elapsedTimeInSeconds = (currentTime - lastPauseTime) ~/ 1000;
+
+    if (_activeMode == "freeTime" && _freeTimeInterval.isActive) {
+      _freeTimeTotalSeconds += elapsedTimeInSeconds;
+    } else if (_activeMode == "productive" && _productiveInterval.isActive) {
+      _productiveTimeTotalSeconds += elapsedTimeInSeconds;
+    }
+    _updateTimeDisplay();
+  }
+
+  void _updateTimeDisplay() {
+    // Update your timer display based on _freeTimeTotalSeconds and _productiveTimeTotalSeconds
+    // Convert seconds into hours, minutes, and seconds and update the UI
+  }
+
   String label = "freeTime";
   String freeTimeHours = "00";
   String freeTimeMinutes = "00";
@@ -513,7 +551,10 @@ class _MainFrameState extends State<MainFrame>
               _buildTimeSpan(hours),
               Text(
                 ":",
-                style: TextStyle(color: Colors.grey[800], fontSize: 65),
+                style: TextStyle(
+                    color: Colors.grey[800],
+                    fontSize: 65,
+                    fontWeight: FontWeight.normal),
               ),
               _buildTimeSpan(minutes),
               Text(":", style: TextStyle(fontSize: 65)),
@@ -527,18 +568,21 @@ class _MainFrameState extends State<MainFrame>
 
   Widget _buildTimeSpan(String value) {
     return Neumorphic(
-      padding: EdgeInsets.all(10),
-      style: NeumorphicStyle(
-        shape: NeumorphicShape.concave,
-        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
-        depth: 8,
-        lightSource: LightSource.topLeft,
-      ),
-      child: Text(
-        value,
-        style: TextStyle(color: Colors.grey[500], fontSize: 72),
-      ),
-    );
+        padding: EdgeInsets.all(10),
+        style: NeumorphicStyle(
+          shape: NeumorphicShape.concave,
+          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
+          depth: 8,
+          lightSource: LightSource.topLeft,
+        ),
+        child: Container(
+            width: 88,
+            child: Center(
+              child: Text(
+                value,
+                style: TextStyle(color: Colors.grey[500], fontSize: 72),
+              ),
+            )));
   }
 
   Widget _buildIconButton(IconData icon, Function() onPressed) {
