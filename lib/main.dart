@@ -584,7 +584,7 @@ class _MainFrameState extends State<MainFrame>
                 value,
                 style: TextStyle(
                     color: Colors.grey[500],
-                    fontSize: 72,
+                    fontSize: 68,
                     fontWeight: FontWeight.normal),
               ),
             )));
