@@ -225,7 +225,7 @@ class _MainFrameState extends State<MainFrame>
       }
     }
 
-    _saveCurrentDayData();
+    _saveCurrentDayData(1);
   }
 
   void _loadSavedValues() async {
@@ -255,7 +255,7 @@ class _MainFrameState extends State<MainFrame>
     setState(() {});
   }
 
-  void _saveCurrentDayData() async {
+  void _saveCurrentDayData(int increment) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int currentDayOfWeek = DateTime.now().weekday; // 1 = Monday, 7 = Sunday
     List<String> daysOfWeek = [
@@ -274,12 +274,13 @@ class _MainFrameState extends State<MainFrame>
         'currentDayProductiveTime' + daysOfWeek[currentDayOfWeek - 1];
 
     // Fetch the current total seconds and increment by 1 for each type
-    int currentFreeTimeSeconds = (prefs.getInt(freeTimeKey) ?? 0) + 1;
+    int currentFreeTimeSeconds = (prefs.getInt(freeTimeKey) ?? 0) + increment;
     int currentProductiveTimeSeconds =
-        (prefs.getInt(productiveTimeKey) ?? 0) + 1;
-    int totalFreeTimeSeconds = (prefs.getInt("totalFreeTimeSeconds") ?? 0) + 1;
+        (prefs.getInt(productiveTimeKey) ?? 0) + increment;
+    int totalFreeTimeSeconds =
+        (prefs.getInt("totalFreeTimeSeconds") ?? 0) + increment;
     int totalProductiveTimeSeconds =
-        (prefs.getInt("totalProductiveTimeSeconds") ?? 0) + 1;
+        (prefs.getInt("totalProductiveTimeSeconds") ?? 0) + increment;
 
     int maximumProductiveSeconds =
         prefs.getInt("maximumProductiveSeconds") ?? 0;
@@ -477,12 +478,8 @@ class _MainFrameState extends State<MainFrame>
     } else if (_activeMode == "productive" && _productiveInterval.isActive) {
       _productiveTimeTotalSeconds += elapsedTimeInSeconds;
     }
-    _updateTimeDisplay();
-  }
 
-  void _updateTimeDisplay() {
-    // Update your timer display based on _freeTimeTotalSeconds and _productiveTimeTotalSeconds
-    // Convert seconds into hours, minutes, and seconds and update the UI
+    _saveCurrentDayData(elapsedTimeInSeconds);
   }
 
   String label = "freeTime";
