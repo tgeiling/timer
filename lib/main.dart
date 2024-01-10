@@ -292,13 +292,31 @@ class _MainFrameState extends State<MainFrame>
         ? DateTime.parse(lastResetDateString)
         : DateTime.now().subtract(Duration(days: 1)); // Default to yesterday
 
+    DateTime midnightYesterday = DateTime(now.year, now.month, now.day);
+    int secondsSinceMidnight = now.difference(midnightYesterday).inSeconds;
+
+    int secondsForToday = secondsSinceMidnight;
+    int secondsForYesterday = increment - secondsSinceMidnight;
+    String yesterdayKey = daysOfWeek[(currentDayOfWeek + 5) % 7];
+
     // Compare the last reset date to the current date
     if (now.year > lastResetDate.year ||
         now.month > lastResetDate.month ||
         now.day > lastResetDate.day) {
-      // It's a new day, reset the counters
-      await prefs.setInt(freeTimeKey, 0);
-      await prefs.setInt(productiveTimeKey, 0);
+      if (increment > 1) {
+        if (_activeMode == "freeTime") {
+          await prefs.setInt(yesterdayKey, secondsForYesterday);
+          await prefs.setInt(freeTimeKey, secondsForToday);
+          await prefs.setInt("totalFreeTimeSeconds", totalFreeTimeSeconds);
+        } else {
+          await prefs.setInt(productiveTimeKey, currentProductiveTimeSeconds);
+          await prefs.setInt(
+              "totalProductiveTimeSeconds", totalProductiveTimeSeconds);
+        }
+      } else {
+        await prefs.setInt(freeTimeKey, 0);
+        await prefs.setInt(productiveTimeKey, 0);
+      }
       // Update the last reset date to today
       await prefs.setString(lastResetDateKey, now.toIso8601String());
       if (totalProductiveTimeSeconds > maximumProductiveSeconds) {
