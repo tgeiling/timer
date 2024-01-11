@@ -40,6 +40,7 @@ var _currentIndex = 0;
 List<double> weekValues = [];
 double freetimeDailyGoal = 0;
 double productiveDailyGoal = 0;
+bool brake = false;
 
 class _MainScaffoldState extends State<MainScaffold> {
   PageController _pageController = PageController();
@@ -406,6 +407,7 @@ class _MainFrameState extends State<MainFrame>
       }
       _productiveInterval = Timer.periodic(Duration(seconds: 1), _stopWatch);
     }
+    brake = false;
   }
 
   void _stop() {
@@ -414,6 +416,15 @@ class _MainFrameState extends State<MainFrame>
     } else if (_activeMode == "productive") {
       _productiveInterval.cancel();
     }
+  }
+
+  void _brakeStop() {
+    if (_activeMode == "freeTime") {
+      _freeTimeInterval.cancel();
+    } else if (_activeMode == "productive") {
+      _productiveInterval.cancel();
+    }
+    brake = true;
   }
 
   void _reset() {
@@ -468,11 +479,11 @@ class _MainFrameState extends State<MainFrame>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.paused) {
+    if (_productiveInterval.isActive && state == AppLifecycleState.paused) {
       // Save the current time when the app is paused
       _saveCurrentTime();
-      _stop();
-    } else if (state == AppLifecycleState.resumed) {
+      _brakeStop();
+    } else if (brake == true && state == AppLifecycleState.resumed) {
       // Calculate the elapsed time and update the timer when the app is resumed
       _updateTimerOnResume();
       _start();
