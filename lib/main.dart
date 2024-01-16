@@ -612,6 +612,7 @@ class _MainFrameState extends State<MainFrame>
         lightSource: LightSource.topLeft,
       ),
       child: Container(
+        width: 75,
         child: Center(
           child: Text(
             value,
