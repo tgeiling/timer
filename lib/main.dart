@@ -337,7 +337,7 @@ class _MainFrameState extends State<MainFrame>
     }
 
     int currentKW = getIsoWeekNumber(DateTime.now());
-    int lastSavedKW = prefs.getInt("lastSavedKW") ?? currentKW;
+    int lastSavedKW = prefs.getInt("lastSavedKW") ?? 0;
 
     // If it's a new week, save the last week's data
     if (currentKW != lastSavedKW) {
