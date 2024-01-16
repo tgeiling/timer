@@ -578,7 +578,7 @@ class _MainFrameState extends State<MainFrame>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildTimeSpan(hours),
+              _buildTimeSpan(hours, context),
               Text(
                 ":",
                 style: TextStyle(
@@ -586,9 +586,9 @@ class _MainFrameState extends State<MainFrame>
                     fontSize: 55,
                     fontWeight: FontWeight.normal),
               ),
-              _buildTimeSpan(minutes),
+              _buildTimeSpan(minutes, context),
               Text(":", style: TextStyle(fontSize: 55)),
-              _buildTimeSpan(seconds),
+              _buildTimeSpan(seconds, context),
             ],
           ),
         )
@@ -596,27 +596,29 @@ class _MainFrameState extends State<MainFrame>
     );
   }
 
-  Widget _buildTimeSpan(String value) {
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-      child: Neumorphic(
-        padding: EdgeInsets.all(10),
-        style: NeumorphicStyle(
-          shape: NeumorphicShape.concave,
-          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
-          depth: 8,
-          lightSource: LightSource.topLeft,
-        ),
-        child: Container(
-          width: 74,
-          child: Center(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 55,
-                fontWeight: FontWeight.normal,
-              ),
+  Widget _buildTimeSpan(String value, BuildContext context) {
+    // Get the TextScaler from the MediaQuery
+    TextScaler textScaler = MediaQuery.of(context).textScaler;
+
+    // Use TextScaler to scale the font size
+    double scaledFontSize = textScaler.scale(70);
+
+    return Neumorphic(
+      padding: EdgeInsets.all(10),
+      style: NeumorphicStyle(
+        shape: NeumorphicShape.concave,
+        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
+        depth: 8,
+        lightSource: LightSource.topLeft,
+      ),
+      child: Container(
+        child: Center(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontSize: scaledFontSize,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
