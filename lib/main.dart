@@ -295,6 +295,8 @@ class _MainFrameState extends State<MainFrame>
         await prefs.setInt('KW$lastSavedKW$freeTimeKey', freeTimeSeconds);
         await prefs.setInt(
             'KW$lastSavedKW$productiveTimeKey', productiveTimeSeconds);
+        await prefs.setInt(freeTimeKey, 0);
+        await prefs.setInt(productiveTimeKey, 0);
       }
 
       // Save the new KW mark
