@@ -114,15 +114,29 @@ Future<double> calculateAverageProductiveHours() async {
     'Sunday'
   ];
 
+  // Process the current week first
   for (String day in daysOfWeek) {
-    int totalSeconds = prefs.getInt('currentDayProductiveTime' + day) ?? 0;
+    String currentWeekKey = 'currentDayProductiveTime' + day;
+    int totalSeconds = prefs.getInt(currentWeekKey) ?? 0;
     if (totalSeconds > 0) {
       daysWithRecordedTime++;
       totalHours += totalSeconds / 3600; // Convert seconds to hours
     }
   }
 
-  // Calculate the average based on days with recorded time
+  // Process the saved weeks
+  List<String> savedWeeks = await getSavedKWWeeks();
+  for (String week in savedWeeks) {
+    for (String day in daysOfWeek) {
+      String key = 'KW$week' + 'currentDayProductiveTime' + day;
+      int totalSeconds = prefs.getInt(key) ?? 0;
+      if (totalSeconds > 0) {
+        daysWithRecordedTime++;
+        totalHours += totalSeconds / 3600;
+      }
+    }
+  }
+
   return daysWithRecordedTime > 0 ? totalHours / daysWithRecordedTime : 0.0;
 }
 
@@ -140,11 +154,26 @@ Future<double> calculateAverageFreeTimeHours() async {
     'Sunday'
   ];
 
+  // Process the current week first
   for (String day in daysOfWeek) {
-    int totalSeconds = prefs.getInt('currentDayFreeTime' + day) ?? 0;
+    String currentWeekKey = 'currentDayFreeTime' + day;
+    int totalSeconds = prefs.getInt(currentWeekKey) ?? 0;
     if (totalSeconds > 0) {
       daysWithRecordedTime++;
       totalHours += totalSeconds / 3600; // Convert seconds to hours
+    }
+  }
+
+  // Process the saved weeks
+  List<String> savedWeeks = await getSavedKWWeeks();
+  for (String week in savedWeeks) {
+    for (String day in daysOfWeek) {
+      String key = 'KW$week' + 'currentDayFreeTime' + day;
+      int totalSeconds = prefs.getInt(key) ?? 0;
+      if (totalSeconds > 0) {
+        daysWithRecordedTime++;
+        totalHours += totalSeconds / 3600;
+      }
     }
   }
 
