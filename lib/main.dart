@@ -274,6 +274,33 @@ class _MainFrameState extends State<MainFrame>
     String productiveTimeKey =
         'currentDayProductiveTime' + daysOfWeek[currentDayOfWeek - 1];
 
+    int currentKW = getIsoWeekNumber(DateTime.now());
+    int lastSavedKW = prefs.getInt("lastSavedKW") ?? 0;
+
+    // If it's a new week, save the last week's data
+    if (currentKW != lastSavedKW) {
+      for (String day in daysOfWeek) {
+        String freeTimeKey = 'currentDayFreeTime' + day;
+        String productiveTimeKey = 'currentDayProductiveTime' + day;
+
+        int freeTimeSeconds = prefs.getInt(freeTimeKey) ?? 0;
+        int productiveTimeSeconds = prefs.getInt(productiveTimeKey) ?? 0;
+
+        print('KW$lastSavedKW$freeTimeKey');
+        print(freeTimeSeconds);
+        print('KW$lastSavedKW$productiveTimeKey');
+        print(productiveTimeSeconds);
+
+        // Save last week's data with a KW mark
+        await prefs.setInt('KW$lastSavedKW$freeTimeKey', freeTimeSeconds);
+        await prefs.setInt(
+            'KW$lastSavedKW$productiveTimeKey', productiveTimeSeconds);
+      }
+
+      // Save the new KW mark
+      await prefs.setInt("lastSavedKW", currentKW);
+    }
+
     // Fetch the current total seconds and increment by 1 for each type
     int currentFreeTimeSeconds = (prefs.getInt(freeTimeKey) ?? 0) + increment;
     int currentProductiveTimeSeconds =
@@ -334,33 +361,6 @@ class _MainFrameState extends State<MainFrame>
         await prefs.setInt(
             "totalProductiveTimeSeconds", totalProductiveTimeSeconds);
       }
-    }
-
-    int currentKW = getIsoWeekNumber(DateTime.now());
-    int lastSavedKW = prefs.getInt("lastSavedKW") ?? 0;
-
-    // If it's a new week, save the last week's data
-    if (currentKW != lastSavedKW) {
-      for (String day in daysOfWeek) {
-        String freeTimeKey = 'currentDayFreeTime' + day;
-        String productiveTimeKey = 'currentDayProductiveTime' + day;
-
-        int freeTimeSeconds = prefs.getInt(freeTimeKey) ?? 0;
-        int productiveTimeSeconds = prefs.getInt(productiveTimeKey) ?? 0;
-
-        print('KW$lastSavedKW$freeTimeKey');
-        print(freeTimeSeconds);
-        print('KW$lastSavedKW$productiveTimeKey');
-        print(productiveTimeSeconds);
-
-        // Save last week's data with a KW mark
-        await prefs.setInt('KW$lastSavedKW$freeTimeKey', freeTimeSeconds);
-        await prefs.setInt(
-            'KW$lastSavedKW$productiveTimeKey', productiveTimeSeconds);
-      }
-
-      // Save the new KW mark
-      await prefs.setInt("lastSavedKW", currentKW);
     }
 
     // Temporary print for debugging - shows the seconds value for every weekday
