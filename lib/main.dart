@@ -601,7 +601,7 @@ class _MainFrameState extends State<MainFrame>
     TextScaler textScaler = MediaQuery.of(context).textScaler;
 
     // Use TextScaler to scale the font size
-    double scaledFontSize = textScaler.scale(70);
+    double scaledFontSize = textScaler.scale(55);
 
     return Neumorphic(
       padding: EdgeInsets.all(10),
