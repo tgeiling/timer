@@ -595,7 +595,9 @@ class _MainFrameState extends State<MainFrame>
   }
 
   Widget _buildTimeSpan(String value) {
-    return Neumorphic(
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: Neumorphic(
         padding: EdgeInsets.all(10),
         style: NeumorphicStyle(
           shape: NeumorphicShape.concave,
@@ -604,16 +606,20 @@ class _MainFrameState extends State<MainFrame>
           lightSource: LightSource.topLeft,
         ),
         child: Container(
-            width: 74,
-            child: Center(
-              child: Text(
-                value,
-                style: TextStyle(
-                    color: Colors.grey[500],
-                    fontSize: 55,
-                    fontWeight: FontWeight.normal),
+          width: 74,
+          child: Center(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 55,
+                fontWeight: FontWeight.normal,
               ),
-            )));
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildIconButton(IconData icon, Function() onPressed) {
