@@ -526,8 +526,11 @@ class _MainFrameState extends State<MainFrame>
     // Get the TextScaler from the MediaQuery
     TextScaler textScaler = MediaQuery.of(context).textScaler;
 
-    // Use TextScaler to scale the font size
-    double scaledFontSize = textScaler.scale(55);
+    double baseFontSize = 55;
+    double scaledFontSize = textScaler.scale(baseFontSize);
+    double maxFontSize = 70;
+    double finalFontSize =
+        (scaledFontSize > maxFontSize) ? maxFontSize : scaledFontSize;
 
     super.build(context);
     return Padding(
@@ -538,7 +541,7 @@ class _MainFrameState extends State<MainFrame>
           Text(
             label,
             style: TextStyle(
-                fontSize: scaledFontSize,
+                fontSize: finalFontSize,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade500),
           ),
@@ -604,8 +607,11 @@ class _MainFrameState extends State<MainFrame>
     // Get the TextScaler from the MediaQuery
     TextScaler textScaler = MediaQuery.of(context).textScaler;
 
-    // Use TextScaler to scale the font size
-    double scaledFontSize = textScaler.scale(55);
+    double baseFontSize = 55;
+    double scaledFontSize = textScaler.scale(baseFontSize);
+    double maxFontSize = 70;
+    double finalFontSize =
+        (scaledFontSize > maxFontSize) ? maxFontSize : scaledFontSize;
 
     return Neumorphic(
       padding: EdgeInsets.all(10),
@@ -624,7 +630,7 @@ class _MainFrameState extends State<MainFrame>
                 value,
                 style: TextStyle(
                   color: Colors.grey[500],
-                  fontSize: scaledFontSize,
+                  fontSize: finalFontSize,
                   fontWeight: FontWeight.normal,
                 ),
               ),
