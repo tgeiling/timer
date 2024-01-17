@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -580,6 +581,13 @@ class _MainFrameState extends State<MainFrame>
     String minutes,
     String seconds,
   ) {
+    TextScaler textScaler = MediaQuery.of(context).textScaler;
+
+    double baseFontSize = 50;
+    double scaledFontSize = textScaler.scale(baseFontSize);
+    double maxFontSize = 55;
+    double finalFontSize =
+        (scaledFontSize > maxFontSize) ? maxFontSize : scaledFontSize;
     return Column(
       children: [
         SizedBox(height: 10),
@@ -595,7 +603,7 @@ class _MainFrameState extends State<MainFrame>
                   fontWeight: FontWeight.normal),
             ),
             Flexible(child: _buildTimeSpan(minutes, context)),
-            Text(":", style: TextStyle(fontSize: 55)),
+            Text(":", style: TextStyle(fontSize: finalFontSize)),
             Flexible(child: _buildTimeSpan(seconds, context)),
           ],
         ),
@@ -624,6 +632,7 @@ class _MainFrameState extends State<MainFrame>
       child: LayoutBuilder(
         builder: (context, constraints) {
           return Container(
+            padding: EdgeInsets.all(4),
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
@@ -631,6 +640,7 @@ class _MainFrameState extends State<MainFrame>
                 style: TextStyle(
                   color: Colors.grey[500],
                   fontSize: finalFontSize,
+                  fontFeatures: [FontFeature.tabularFigures()],
                   fontWeight: FontWeight.normal,
                 ),
               ),
