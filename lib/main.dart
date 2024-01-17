@@ -527,9 +527,9 @@ class _MainFrameState extends State<MainFrame>
     // Get the TextScaler from the MediaQuery
     TextScaler textScaler = MediaQuery.of(context).textScaler;
 
-    double baseFontSize = 50;
+    double baseFontSize = 45;
     double scaledFontSize = textScaler.scale(baseFontSize);
-    double maxFontSize = 55;
+    double maxFontSize = 50;
     double finalFontSize =
         (scaledFontSize > maxFontSize) ? maxFontSize : scaledFontSize;
 
@@ -615,9 +615,9 @@ class _MainFrameState extends State<MainFrame>
     // Get the TextScaler from the MediaQuery
     TextScaler textScaler = MediaQuery.of(context).textScaler;
 
-    double baseFontSize = 55;
+    double baseFontSize = 52;
     double scaledFontSize = textScaler.scale(baseFontSize);
-    double maxFontSize = 62;
+    double maxFontSize = 58;
     double finalFontSize =
         (scaledFontSize > maxFontSize) ? maxFontSize : scaledFontSize;
 

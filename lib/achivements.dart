@@ -249,6 +249,22 @@ class _AchievementsPageState extends State<AchievementsPage>
     int numberOfAchieved =
         achievements.where((a) => a.progressPercentage >= 1.0).length;
 
+    // Get the TextScaler from the MediaQuery
+    TextScaler textScaler = MediaQuery.of(context).textScaler;
+
+    double baseFontSize = 34;
+    double scaledFontSize = textScaler.scale(baseFontSize);
+    double maxFontSize = 38;
+    double finalFontSize =
+        (scaledFontSize > maxFontSize) ? maxFontSize : scaledFontSize;
+
+    double smallBaseFontSize = 24;
+    double smallScaledFontSize = textScaler.scale(smallBaseFontSize);
+    double smallMaxFontSize = 30;
+    double smallFinalFontSize = (smallScaledFontSize > smallMaxFontSize)
+        ? smallMaxFontSize
+        : scaledFontSize;
+
     return Scaffold(
       body: Center(
         child: Column(
@@ -260,13 +276,15 @@ class _AchievementsPageState extends State<AchievementsPage>
               child: Text(
                 'Achievements',
                 textAlign: TextAlign.center, // Center align the text
-                style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: finalFontSize, fontWeight: FontWeight.bold),
               ),
             ),
             Text(
               "$numberOfAchieved/${achievements.length}", // Display achieved/total achievements
-              style:
-                  TextStyle(fontSize: 24, color: Colors.grey), // Style the text
+              style: TextStyle(
+                  fontSize: smallFinalFontSize,
+                  color: Colors.grey), // Style the text
               textAlign: TextAlign.center, // Center align the text
             ),
             Expanded(
