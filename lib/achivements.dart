@@ -87,7 +87,7 @@ class _AchievementsPageState extends State<AchievementsPage>
           maximumValue: 2,
           decimalPoints: 2),
       Achievement(
-          header: 'Equal too part-time work',
+          header: 'Part-time work',
           title: 'Reach 4 productive hours average',
           imageAsset: 'assets/reach4avg.png',
           maximumValue: 4,
