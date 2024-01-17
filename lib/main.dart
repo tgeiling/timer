@@ -523,16 +523,22 @@ class _MainFrameState extends State<MainFrame>
 
   @override
   Widget build(BuildContext context) {
+    // Get the TextScaler from the MediaQuery
+    TextScaler textScaler = MediaQuery.of(context).textScaler;
+
+    // Use TextScaler to scale the font size
+    double scaledFontSize = textScaler.scale(55);
+
     super.build(context);
     return Padding(
-      padding: EdgeInsets.only(top: 50),
+      padding: EdgeInsets.only(top: 60),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
             style: TextStyle(
-                fontSize: 60,
+                fontSize: scaledFontSize,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade500),
           ),
@@ -599,7 +605,7 @@ class _MainFrameState extends State<MainFrame>
     TextScaler textScaler = MediaQuery.of(context).textScaler;
 
     // Use TextScaler to scale the font size
-    double scaledFontSize = textScaler.scale(80);
+    double scaledFontSize = textScaler.scale(55);
 
     return Neumorphic(
       padding: EdgeInsets.all(10),
@@ -619,7 +625,7 @@ class _MainFrameState extends State<MainFrame>
                 style: TextStyle(
                   color: Colors.grey[500],
                   fontSize: scaledFontSize,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.normal,
                 ),
               ),
             ),
