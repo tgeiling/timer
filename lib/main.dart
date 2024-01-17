@@ -574,24 +574,22 @@ class _MainFrameState extends State<MainFrame>
     return Column(
       children: [
         SizedBox(height: 10),
-        Container(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildTimeSpan(hours, context),
-              Text(
-                ":",
-                style: TextStyle(
-                    color: Colors.grey[800],
-                    fontSize: 55,
-                    fontWeight: FontWeight.normal),
-              ),
-              _buildTimeSpan(minutes, context),
-              Text(":", style: TextStyle(fontSize: 55)),
-              _buildTimeSpan(seconds, context),
-            ],
-          ),
-        )
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(child: _buildTimeSpan(hours, context)),
+            Text(
+              ":",
+              style: TextStyle(
+                  color: Colors.grey[800],
+                  fontSize: 55,
+                  fontWeight: FontWeight.normal),
+            ),
+            Flexible(child: _buildTimeSpan(minutes, context)),
+            Text(":", style: TextStyle(fontSize: 55)),
+            Flexible(child: _buildTimeSpan(seconds, context)),
+          ],
+        ),
       ],
     );
   }
@@ -601,7 +599,7 @@ class _MainFrameState extends State<MainFrame>
     TextScaler textScaler = MediaQuery.of(context).textScaler;
 
     // Use TextScaler to scale the font size
-    double scaledFontSize = textScaler.scale(50);
+    double scaledFontSize = textScaler.scale(80);
 
     return Neumorphic(
       padding: EdgeInsets.all(10),
@@ -611,18 +609,22 @@ class _MainFrameState extends State<MainFrame>
         depth: 8,
         lightSource: LightSource.topLeft,
       ),
-      child: Container(
-        width: 75,
-        child: Center(
-          child: Text(
-            value,
-            style: TextStyle(
-              color: Colors.grey[500],
-              fontSize: scaledFontSize,
-              fontWeight: FontWeight.normal,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Container(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: scaledFontSize,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
