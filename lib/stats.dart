@@ -448,7 +448,6 @@ class _StatsState extends State<Stats> with AutomaticKeepAliveClientMixin {
       maxY: 1,
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
-          tooltipBgColor: Colors.blueGrey,
           getTooltipItem: (group, groupIndex, rod, rodIndex) {
             final percentage = (rod.toY * 100).toStringAsFixed(1) + '%';
             return BarTooltipItem(

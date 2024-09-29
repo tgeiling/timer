@@ -17,7 +17,7 @@ void main() {
 
 ThemeData themeData = ThemeData(
   textTheme: TextTheme(
-    bodyText1: GoogleFonts.roboto(),
+    bodyLarge: GoogleFonts.roboto(),
   ),
 );
 
@@ -350,10 +350,6 @@ class _MainFrameState extends State<MainFrame>
       }
       // Update the last reset date to today
       await prefs.setString(lastResetDateKey, now.toIso8601String());
-      if (totalProductiveTimeSeconds > maximumProductiveSeconds) {
-        await prefs.setInt(
-            "maximumProductiveSeconds", totalProductiveTimeSeconds);
-      }
     } else {
       // Save the updated seconds back to SharedPreferences
       if (_activeMode == "freeTime") {
@@ -482,7 +478,8 @@ class _MainFrameState extends State<MainFrame>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (_productiveInterval.isActive && state == AppLifecycleState.paused) {
+    if (_productiveInterval.isActive ||
+        _freeTimeInterval.isActive && state == AppLifecycleState.paused) {
       // Save the current time when the app is paused
       _saveCurrentTime();
       _brakeStop();
@@ -656,7 +653,7 @@ class _MainFrameState extends State<MainFrame>
       return TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          primary: Colors.black,
+          foregroundColor: Colors.black,
           padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         ),
         child: NeumorphicIcon(
@@ -674,7 +671,7 @@ class _MainFrameState extends State<MainFrame>
       return TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          primary: Colors.black,
+          foregroundColor: Colors.black,
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
         child: NeumorphicIcon(
@@ -691,7 +688,7 @@ class _MainFrameState extends State<MainFrame>
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
-        primary: Colors.black,
+        foregroundColor: Colors.black,
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       ),
       child: NeumorphicIcon(
