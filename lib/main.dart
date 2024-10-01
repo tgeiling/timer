@@ -330,6 +330,11 @@ class _MainFrameState extends State<MainFrame>
     int secondsForYesterday = increment - secondsSinceMidnight;
     String yesterdayKey = daysOfWeek[(currentDayOfWeek + 5) % 7];
 
+    if (currentProductiveTimeSeconds > maximumProductiveSeconds) {
+      await prefs.setInt(
+          "maximumProductiveSeconds", currentProductiveTimeSeconds);
+    }
+
     // Compare the last reset date to the current date
     if (now.year > lastResetDate.year ||
         now.month > lastResetDate.month ||
