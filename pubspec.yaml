@@ -2,7 +2,11 @@ name: timer
 description: A new Flutter project.
 publish_to: 'none'
 
+<<<<<<< Updated upstream
 version: 2.0.9+12
+=======
+version: 2.1.0+11
+>>>>>>> Stashed changes
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
