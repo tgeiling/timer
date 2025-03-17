@@ -139,13 +139,13 @@ class _MainFrameState extends State<MainFrame>
     WidgetsBinding.instance.addObserver(this);
   }
 
-  void _updateTime(int hours, int minutes, int seconds) async {
+  void _updateTime(int hours, int minutes, int seconds, bool edit) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     if (_currentIndex == 0) {
       setState(() {
         if (_activeMode == "freeTime" ||
-            (hours == 0 && minutes == 0 && seconds == 0)) {
+            (hours == 0 && minutes == 0 && seconds == 0) && !edit) {
           freeTimeHours = hours.toString().padLeft(2, "0");
           freeTimeMinutes = minutes.toString().padLeft(2, "0");
           freeTimeSeconds = seconds.toString().padLeft(2, "0");
@@ -165,7 +165,7 @@ class _MainFrameState extends State<MainFrame>
         }
 
         if (_activeMode == "productive" ||
-            (hours == 0 && minutes == 0 && seconds == 0)) {
+            (hours == 0 && minutes == 0 && seconds == 0) && !edit) {
           productiveHours = hours.toString().padLeft(2, "0");
           productiveMinutes = minutes.toString().padLeft(2, "0");
           productiveSeconds = seconds.toString().padLeft(2, "0");
@@ -187,7 +187,7 @@ class _MainFrameState extends State<MainFrame>
       });
     } else {
       if (_activeMode == "freeTime" ||
-          (hours == 0 && minutes == 0 && seconds == 0)) {
+          (hours == 0 && minutes == 0 && seconds == 0) && !edit) {
         freeTimeHours = hours.toString().padLeft(2, "0");
         freeTimeMinutes = minutes.toString().padLeft(2, "0");
         freeTimeSeconds = seconds.toString().padLeft(2, "0");
@@ -207,7 +207,7 @@ class _MainFrameState extends State<MainFrame>
       }
 
       if (_activeMode == "productive" ||
-          (hours == 0 && minutes == 0 && seconds == 0)) {
+          (hours == 0 && minutes == 0 && seconds == 0) && !edit) {
         productiveHours = hours.toString().padLeft(2, "0");
         productiveMinutes = minutes.toString().padLeft(2, "0");
         productiveSeconds = seconds.toString().padLeft(2, "0");
@@ -436,7 +436,7 @@ class _MainFrameState extends State<MainFrame>
     _productiveInterval.cancel();
     _freeTimeTotalSeconds = 0;
     _productiveTimeTotalSeconds = 0;
-    _updateTime(0, 0, 0);
+    _updateTime(0, 0, 0, false);
   }
 
   void _resetTimers() {
@@ -463,6 +463,106 @@ class _MainFrameState extends State<MainFrame>
     _start();
   }
 
+  void editTime(bool isFreeTime) async {
+    TextEditingController hoursController = TextEditingController();
+    TextEditingController minutesController = TextEditingController();
+    TextEditingController secondsController = TextEditingController();
+
+    if (_activeMode == "productive" && isFreeTime) {
+      _switchTime();
+    }
+    if (_activeMode == "freeTime" && !isFreeTime) {
+      _switchTime();
+    }
+
+    // Get current values based on new _activeMode
+    int currentSeconds =
+        isFreeTime ? _freeTimeTotalSeconds : _productiveTimeTotalSeconds;
+    int currentHours = currentSeconds ~/ 3600;
+    int currentMinutes = (currentSeconds % 3600) ~/ 60;
+    int currentSecs = currentSeconds % 60;
+
+    // Pre-fill text fields with current values
+    hoursController.text = currentHours.toString();
+    minutesController.text = currentMinutes.toString();
+    secondsController.text = currentSecs.toString();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            isFreeTime ? "Edit Free Time" : "Edit Productive Time",
+            style: TextStyle(color: Colors.black), // Title in black
+          ),
+          content: SingleChildScrollView(
+              child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildNeumorphicTextField(hoursController, "Hours"),
+              SizedBox(height: 10),
+              _buildNeumorphicTextField(minutesController, "Minutes"),
+              SizedBox(height: 10),
+              _buildNeumorphicTextField(secondsController, "Seconds"),
+            ],
+          )),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                "Cancel",
+                style: TextStyle(color: Colors.black), // Button text black
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                int newHours = int.tryParse(hoursController.text) ?? 0;
+                int newMinutes = int.tryParse(minutesController.text) ?? 0;
+                int newSeconds = int.tryParse(secondsController.text) ?? 0;
+
+                // Now _activeMode is correctly set before calling _updateTime
+                _updateTime(newHours, newMinutes, newSeconds, true);
+
+                Navigator.pop(context);
+              },
+              child: Text(
+                "Save",
+                style: TextStyle(color: Colors.black), // Button text black
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildNeumorphicTextField(
+      TextEditingController controller, String label) {
+    return Neumorphic(
+      style: NeumorphicStyle(
+        depth: -4,
+        intensity: 0.7,
+        surfaceIntensity: 0.2,
+        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
+        color: Colors.white, // Keep it light for visibility
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        cursorColor: Colors.black, // Ensure black cursor
+        style: TextStyle(color: Colors.black), // Input text color
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.black), // Label in black
+          border: InputBorder.none, // Neumorphic removes default border
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        ),
+      ),
+    );
+  }
+
   void _stopWatch(Timer timer) {
     late int counter; // Provide an initial value
     if (_activeMode == "freeTime") {
@@ -477,7 +577,7 @@ class _MainFrameState extends State<MainFrame>
     int minutes = (counter ~/ 60) % 60;
     int seconds = counter % 60;
 
-    _updateTime(hours, minutes, seconds);
+    _updateTime(hours, minutes, seconds, false);
   }
 
   @override
@@ -554,6 +654,7 @@ class _MainFrameState extends State<MainFrame>
             freeTimeHours,
             freeTimeMinutes,
             freeTimeSeconds,
+            true,
           ),
           SizedBox(height: 20),
           _buildTimer(
@@ -561,6 +662,7 @@ class _MainFrameState extends State<MainFrame>
             productiveHours,
             productiveMinutes,
             productiveSeconds,
+            false,
           ),
           SizedBox(height: 20),
           Row(
@@ -582,6 +684,7 @@ class _MainFrameState extends State<MainFrame>
     String hours,
     String minutes,
     String seconds,
+    bool isFreeTime,
   ) {
     TextScaler textScaler = MediaQuery.of(context).textScaler;
 
@@ -590,23 +693,68 @@ class _MainFrameState extends State<MainFrame>
     double maxFontSize = 55;
     double finalFontSize =
         (scaledFontSize > maxFontSize) ? maxFontSize : scaledFontSize;
+
     return Column(
       children: [
         SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Stack(
+          clipBehavior: Clip
+              .none, // Allows button to slightly overflow without affecting layout
           children: [
-            Flexible(child: _buildTimeSpan(hours, context)),
-            Text(
-              ":",
-              style: TextStyle(
-                  color: Colors.grey[800],
-                  fontSize: 55,
-                  fontWeight: FontWeight.normal),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(child: _buildTimeSpan(hours, context)),
+                Text(
+                  ":",
+                  style: TextStyle(
+                      color: Colors.grey[800],
+                      fontSize: 55,
+                      fontWeight: FontWeight.normal),
+                ),
+                Flexible(child: _buildTimeSpan(minutes, context)),
+                Text(":", style: TextStyle(fontSize: finalFontSize)),
+                Flexible(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      _buildTimeSpan(
+                          seconds, context), // Keeps original styling
+                      Positioned(
+                        top: -8, // Adjust slightly for better positioning
+                        right:
+                            -8, // Align perfectly to top-right of seconds box
+                        child: GestureDetector(
+                          onTap: () {
+                            editTime(isFreeTime);
+                          },
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.grey[400],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 2,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            Flexible(child: _buildTimeSpan(minutes, context)),
-            Text(":", style: TextStyle(fontSize: finalFontSize)),
-            Flexible(child: _buildTimeSpan(seconds, context)),
           ],
         ),
       ],
@@ -614,7 +762,6 @@ class _MainFrameState extends State<MainFrame>
   }
 
   Widget _buildTimeSpan(String value, BuildContext context) {
-    // Get the TextScaler from the MediaQuery
     TextScaler textScaler = MediaQuery.of(context).textScaler;
 
     double baseFontSize = 52;
@@ -629,6 +776,8 @@ class _MainFrameState extends State<MainFrame>
         shape: NeumorphicShape.concave,
         boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
         depth: 8,
+        intensity: 0.6,
+        surfaceIntensity: 0.15,
         lightSource: LightSource.topLeft,
       ),
       child: LayoutBuilder(
