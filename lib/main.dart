@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -257,6 +258,29 @@ class _MainFrameState extends State<MainFrame>
     setState(() {});
   }
 
+  int storedFreeTimeSeconds = 0;
+  int storedProductiveTimeSeconds = 0;
+  int storedTotalFreeTimeSeconds = 0;
+  int storedTotalProductiveTimeSeconds = 0;
+
+  void _loadStoredTimeValues() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    storedFreeTimeSeconds = prefs.getInt("storedFreeTimeSeconds") ?? 0;
+    storedProductiveTimeSeconds =
+        prefs.getInt("storedProductiveTimeSeconds") ?? 0;
+    storedTotalFreeTimeSeconds =
+        prefs.getInt("storedTotalFreeTimeSeconds") ?? 0;
+    storedTotalProductiveTimeSeconds =
+        prefs.getInt("storedTotalProductiveTimeSeconds") ?? 0;
+
+    print("✅ Loaded stored time values at app start:");
+    print(
+        "Free Time: $storedFreeTimeSeconds, Productive Time: $storedProductiveTimeSeconds");
+    print(
+        "Total Free Time: $storedTotalFreeTimeSeconds, Total Productive Time: $storedTotalProductiveTimeSeconds");
+  }
+
   void _saveCurrentDayData(int increment) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int currentDayOfWeek = DateTime.now().weekday; // 1 = Monday, 7 = Sunday
@@ -278,7 +302,7 @@ class _MainFrameState extends State<MainFrame>
     int currentKW = getIsoWeekNumber(DateTime.now());
     int lastSavedKW = prefs.getInt("lastSavedKW") ?? 0;
 
-    // If it's a new week, save the last week's data
+    // If it's a new week, reset weekly data
     if (currentKW != lastSavedKW) {
       for (String day in daysOfWeek) {
         String freeTimeKey = 'currentDayFreeTime' + day;
@@ -287,31 +311,22 @@ class _MainFrameState extends State<MainFrame>
         int freeTimeSeconds = prefs.getInt(freeTimeKey) ?? 0;
         int productiveTimeSeconds = prefs.getInt(productiveTimeKey) ?? 0;
 
-        print('KW$lastSavedKW$freeTimeKey');
-        print(freeTimeSeconds);
-        print('KW$lastSavedKW$productiveTimeKey');
-        print(productiveTimeSeconds);
-
-        // Save last week's data with a KW mark
         await prefs.setInt('KW$lastSavedKW$freeTimeKey', freeTimeSeconds);
         await prefs.setInt(
             'KW$lastSavedKW$productiveTimeKey', productiveTimeSeconds);
         await prefs.setInt(freeTimeKey, 0);
         await prefs.setInt(productiveTimeKey, 0);
       }
-
-      // Save the new KW mark
       await prefs.setInt("lastSavedKW", currentKW);
     }
 
-    // Fetch the current total seconds and increment by 1 for each type
-    int currentFreeTimeSeconds = (prefs.getInt(freeTimeKey) ?? 0) + increment;
-    int currentProductiveTimeSeconds =
-        (prefs.getInt(productiveTimeKey) ?? 0) + increment;
-    int totalFreeTimeSeconds =
-        (prefs.getInt("totalFreeTimeSeconds") ?? 0) + increment;
-    int totalProductiveTimeSeconds =
-        (prefs.getInt("totalProductiveTimeSeconds") ?? 0) + increment;
+    // ✅ Update global variables first
+    storedFreeTimeSeconds = max(0, storedFreeTimeSeconds + increment);
+    storedProductiveTimeSeconds =
+        max(0, storedProductiveTimeSeconds + increment);
+    storedTotalFreeTimeSeconds = max(0, storedTotalFreeTimeSeconds + increment);
+    storedTotalProductiveTimeSeconds =
+        max(0, storedTotalProductiveTimeSeconds + increment);
 
     int maximumProductiveSeconds =
         prefs.getInt("maximumProductiveSeconds") ?? 0;
@@ -330,9 +345,9 @@ class _MainFrameState extends State<MainFrame>
     int secondsForYesterday = increment - secondsSinceMidnight;
     String yesterdayKey = daysOfWeek[(currentDayOfWeek + 5) % 7];
 
-    if (currentProductiveTimeSeconds > maximumProductiveSeconds) {
+    if (storedProductiveTimeSeconds > maximumProductiveSeconds) {
       await prefs.setInt(
-          "maximumProductiveSeconds", currentProductiveTimeSeconds);
+          "maximumProductiveSeconds", storedProductiveTimeSeconds);
     }
 
     // Compare the last reset date to the current date
@@ -343,11 +358,12 @@ class _MainFrameState extends State<MainFrame>
         if (_activeMode == "freeTime") {
           await prefs.setInt(yesterdayKey, secondsForYesterday);
           await prefs.setInt(freeTimeKey, secondsForToday);
-          await prefs.setInt("totalFreeTimeSeconds", totalFreeTimeSeconds);
-        } else {
-          await prefs.setInt(productiveTimeKey, currentProductiveTimeSeconds);
           await prefs.setInt(
-              "totalProductiveTimeSeconds", totalProductiveTimeSeconds);
+              "totalFreeTimeSeconds", storedTotalFreeTimeSeconds);
+        } else {
+          await prefs.setInt(productiveTimeKey, storedProductiveTimeSeconds);
+          await prefs.setInt(
+              "totalProductiveTimeSeconds", storedTotalProductiveTimeSeconds);
         }
       } else {
         await prefs.setInt(freeTimeKey, 0);
@@ -356,21 +372,24 @@ class _MainFrameState extends State<MainFrame>
       // Update the last reset date to today
       await prefs.setString(lastResetDateKey, now.toIso8601String());
     } else {
-      // Save the updated seconds back to SharedPreferences
+      // ✅ Save the updated values
       if (_activeMode == "freeTime") {
-        await prefs.setInt(freeTimeKey, currentFreeTimeSeconds);
-        await prefs.setInt("totalFreeTimeSeconds", totalFreeTimeSeconds);
+        await prefs.setInt(freeTimeKey, storedFreeTimeSeconds);
+        await prefs.setInt("totalFreeTimeSeconds", storedTotalFreeTimeSeconds);
       } else {
-        await prefs.setInt(productiveTimeKey, currentProductiveTimeSeconds);
+        await prefs.setInt(productiveTimeKey, storedProductiveTimeSeconds);
         await prefs.setInt(
-            "totalProductiveTimeSeconds", totalProductiveTimeSeconds);
+            "totalProductiveTimeSeconds", storedTotalProductiveTimeSeconds);
       }
     }
 
-    // Temporary print for debugging - shows the seconds value for every weekday
-    print("########## Total Seconds for Each Day ##########");
-    print("Total Seconds productive: $totalProductiveTimeSeconds");
-    print("Total Seconds productive: $totalFreeTimeSeconds");
+    // Debug print statements to verify values
+    print("########## Updated Stored Values ##########");
+    print("Stored Free Time: $storedFreeTimeSeconds");
+    print("Stored Productive Time: $storedProductiveTimeSeconds");
+    print("Stored Total Free Time: $storedTotalFreeTimeSeconds");
+    print("Stored Total Productive Time: $storedTotalProductiveTimeSeconds");
+
     for (String day in daysOfWeek) {
       String tempFreeKey = 'currentDayFreeTime' + day;
       String tempProdKey = 'currentDayProductiveTime' + day;
@@ -487,6 +506,8 @@ class _MainFrameState extends State<MainFrame>
     minutesController.text = currentMinutes.toString();
     secondsController.text = currentSecs.toString();
 
+    _stop();
+
     showDialog(
       context: context,
       builder: (context) {
@@ -495,8 +516,7 @@ class _MainFrameState extends State<MainFrame>
             isFreeTime ? "Edit Free Time" : "Edit Productive Time",
             style: TextStyle(color: Colors.black), // Title in black
           ),
-          content: SingleChildScrollView(
-              child: Column(
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildNeumorphicTextField(hoursController, "Hours"),
@@ -505,7 +525,7 @@ class _MainFrameState extends State<MainFrame>
               SizedBox(height: 10),
               _buildNeumorphicTextField(secondsController, "Seconds"),
             ],
-          )),
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -522,10 +542,26 @@ class _MainFrameState extends State<MainFrame>
                 int newMinutes = int.tryParse(minutesController.text) ?? 0;
                 int newSeconds = int.tryParse(secondsController.text) ?? 0;
 
-                // Now _activeMode is correctly set before calling _updateTime
+                int newTotalSeconds =
+                    (newHours * 3600) + (newMinutes * 60) + newSeconds;
+
+                // Calculate the difference in seconds
+                int elapsedTimeInSeconds = newTotalSeconds - currentSeconds;
+
+                // Call _updateTime with the new values
                 _updateTime(newHours, newMinutes, newSeconds, true);
 
+                if (_activeMode == "freeTime") {
+                  _freeTimeTotalSeconds += elapsedTimeInSeconds;
+                } else if (_activeMode == "productive") {
+                  _productiveTimeTotalSeconds += elapsedTimeInSeconds;
+                }
+
+                // Save the difference in the day's data
+                _saveCurrentDayData(elapsedTimeInSeconds);
+
                 Navigator.pop(context);
+                _start();
               },
               child: Text(
                 "Save",
