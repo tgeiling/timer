@@ -320,59 +320,105 @@ class _MainFrameState extends State<MainFrame>
       await prefs.setInt("lastSavedKW", currentKW);
     }
 
-    // ✅ Update global variables first
-    storedFreeTimeSeconds = max(0, storedFreeTimeSeconds + increment);
-    storedProductiveTimeSeconds =
-        max(0, storedProductiveTimeSeconds + increment);
-    storedTotalFreeTimeSeconds = max(0, storedTotalFreeTimeSeconds + increment);
-    storedTotalProductiveTimeSeconds =
-        max(0, storedTotalProductiveTimeSeconds + increment);
-
-    int maximumProductiveSeconds =
-        prefs.getInt("maximumProductiveSeconds") ?? 0;
-
     DateTime now = DateTime.now();
     String lastResetDateKey = "lastResetDate";
     String? lastResetDateString = await prefs.getString(lastResetDateKey);
     DateTime lastResetDate = lastResetDateString != null
         ? DateTime.parse(lastResetDateString)
         : DateTime.now().subtract(Duration(days: 1)); // Default to yesterday
+    DateTime midnightToday = DateTime(now.year, now.month, now.day);
 
-    DateTime midnightYesterday = DateTime(now.year, now.month, now.day);
-    int secondsSinceMidnight = now.difference(midnightYesterday).inSeconds;
+    // Check if it's a new day
+    bool isNewDay = now.year > lastResetDate.year ||
+        now.month > lastResetDate.month ||
+        now.day > lastResetDate.day;
 
-    int secondsForToday = secondsSinceMidnight;
-    int secondsForYesterday = increment - secondsSinceMidnight;
-    String yesterdayKey = daysOfWeek[(currentDayOfWeek + 5) % 7];
+    // Calculate time values first
+    int secondsSinceMidnight = now.difference(midnightToday).inSeconds;
+    int secondsForToday = min(increment, secondsSinceMidnight);
+    int secondsForYesterday =
+        increment > secondsSinceMidnight ? increment - secondsSinceMidnight : 0;
+    String yesterdayKey =
+        daysOfWeek[(currentDayOfWeek + 5) % 7]; // This gives the previous day
 
-    if (storedProductiveTimeSeconds > maximumProductiveSeconds) {
+    // ✅ Update only the appropriate global variables based on active mode
+    if (_activeMode == "freeTime") {
+      // If it's a new day and the increment contains time from yesterday,
+      // only add today's portion to the daily counter
+      if (isNewDay && increment > secondsSinceMidnight) {
+        storedFreeTimeSeconds = max(0, secondsForToday);
+      } else {
+        storedFreeTimeSeconds = max(0, storedFreeTimeSeconds + increment);
+      }
+      storedTotalFreeTimeSeconds =
+          max(0, storedTotalFreeTimeSeconds + increment);
+    } else {
+      // If it's a new day and the increment contains time from yesterday,
+      // only add today's portion to the daily counter
+      if (isNewDay && increment > secondsSinceMidnight) {
+        storedProductiveTimeSeconds = max(0, secondsForToday);
+      } else {
+        storedProductiveTimeSeconds =
+            max(0, storedProductiveTimeSeconds + increment);
+      }
+      storedTotalProductiveTimeSeconds =
+          max(0, storedTotalProductiveTimeSeconds + increment);
+    }
+
+    int maximumProductiveSeconds =
+        prefs.getInt("maximumProductiveSeconds") ?? 0;
+
+    // Reset daily counters if it's a new day (before we add the new increment)
+    if (isNewDay) {
+      // Reset daily counters but keep total counters
+      storedFreeTimeSeconds = 0;
+      storedProductiveTimeSeconds = 0;
+    }
+
+    if (_activeMode == "productive" &&
+        storedProductiveTimeSeconds > maximumProductiveSeconds) {
       await prefs.setInt(
           "maximumProductiveSeconds", storedProductiveTimeSeconds);
     }
 
     // Compare the last reset date to the current date
-    if (now.year > lastResetDate.year ||
-        now.month > lastResetDate.month ||
-        now.day > lastResetDate.day) {
+    if (isNewDay) {
       if (increment > 1) {
+        // Handle time that spans across midnight
         if (_activeMode == "freeTime") {
-          await prefs.setInt(yesterdayKey, secondsForYesterday);
+          // For yesterday: Save the portion of time that was spent yesterday
+          String yesterdayFreeTimeKey = 'currentDayFreeTime' + yesterdayKey;
+          int existingYesterdayTime = prefs.getInt(yesterdayFreeTimeKey) ?? 0;
+          await prefs.setInt(yesterdayFreeTimeKey,
+              existingYesterdayTime + secondsForYesterday);
+
+          // For today: Only count the time spent after midnight
           await prefs.setInt(freeTimeKey, secondsForToday);
           await prefs.setInt(
               "totalFreeTimeSeconds", storedTotalFreeTimeSeconds);
         } else {
-          await prefs.setInt(productiveTimeKey, storedProductiveTimeSeconds);
+          // For yesterday: Save the portion of time that was spent yesterday
+          String yesterdayProductiveTimeKey =
+              'currentDayProductiveTime' + yesterdayKey;
+          int existingYesterdayTime =
+              prefs.getInt(yesterdayProductiveTimeKey) ?? 0;
+          await prefs.setInt(yesterdayProductiveTimeKey,
+              existingYesterdayTime + secondsForYesterday);
+
+          // For today: Only count the time spent after midnight
+          await prefs.setInt(productiveTimeKey, secondsForToday);
           await prefs.setInt(
               "totalProductiveTimeSeconds", storedTotalProductiveTimeSeconds);
         }
       } else {
+        // When increment is 1 or less, this is a regular reset scenario
         await prefs.setInt(freeTimeKey, 0);
         await prefs.setInt(productiveTimeKey, 0);
       }
       // Update the last reset date to today
       await prefs.setString(lastResetDateKey, now.toIso8601String());
     } else {
-      // ✅ Save the updated values
+      // ✅ Save only the updated values based on active mode
       if (_activeMode == "freeTime") {
         await prefs.setInt(freeTimeKey, storedFreeTimeSeconds);
         await prefs.setInt("totalFreeTimeSeconds", storedTotalFreeTimeSeconds);
