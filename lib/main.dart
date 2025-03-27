@@ -137,6 +137,7 @@ class _MainFrameState extends State<MainFrame>
     super.initState();
     _loadSavedValues();
     _resetTimers();
+    _loadStoredTimeValues();
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -262,24 +263,6 @@ class _MainFrameState extends State<MainFrame>
   int storedProductiveTimeSeconds = 0;
   int storedTotalFreeTimeSeconds = 0;
   int storedTotalProductiveTimeSeconds = 0;
-
-  void _loadStoredTimeValues() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    storedFreeTimeSeconds = prefs.getInt("storedFreeTimeSeconds") ?? 0;
-    storedProductiveTimeSeconds =
-        prefs.getInt("storedProductiveTimeSeconds") ?? 0;
-    storedTotalFreeTimeSeconds =
-        prefs.getInt("storedTotalFreeTimeSeconds") ?? 0;
-    storedTotalProductiveTimeSeconds =
-        prefs.getInt("storedTotalProductiveTimeSeconds") ?? 0;
-
-    print("✅ Loaded stored time values at app start:");
-    print(
-        "Free Time: $storedFreeTimeSeconds, Productive Time: $storedProductiveTimeSeconds");
-    print(
-        "Total Free Time: $storedTotalFreeTimeSeconds, Total Productive Time: $storedTotalProductiveTimeSeconds");
-  }
 
   void _saveCurrentDayData(int increment) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -429,6 +412,15 @@ class _MainFrameState extends State<MainFrame>
       }
     }
 
+    // ✅ Always save the current state of our counter variables
+    await prefs.setInt("storedFreeTimeSeconds", storedFreeTimeSeconds);
+    await prefs.setInt(
+        "storedProductiveTimeSeconds", storedProductiveTimeSeconds);
+    await prefs.setInt(
+        "storedTotalFreeTimeSeconds", storedTotalFreeTimeSeconds);
+    await prefs.setInt(
+        "storedTotalProductiveTimeSeconds", storedTotalProductiveTimeSeconds);
+
     // Debug print statements to verify values
     print("########## Updated Stored Values ##########");
     print("Stored Free Time: $storedFreeTimeSeconds");
@@ -444,6 +436,39 @@ class _MainFrameState extends State<MainFrame>
       print(
           "$day - Free Time: $freeSeconds seconds, Productive Time: $prodSeconds seconds");
     }
+  }
+
+  void _saveCounterVariables() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    await prefs.setInt("storedFreeTimeSeconds", storedFreeTimeSeconds);
+    await prefs.setInt(
+        "storedProductiveTimeSeconds", storedProductiveTimeSeconds);
+    await prefs.setInt(
+        "storedTotalFreeTimeSeconds", storedTotalFreeTimeSeconds);
+    await prefs.setInt(
+        "storedTotalProductiveTimeSeconds", storedTotalProductiveTimeSeconds);
+
+    print("✅ Saved counter variables when app was paused/backgrounded");
+  }
+
+// Now modify _loadStoredTimeValues to properly load these values
+  void _loadStoredTimeValues() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    storedFreeTimeSeconds = prefs.getInt("storedFreeTimeSeconds") ?? 0;
+    storedProductiveTimeSeconds =
+        prefs.getInt("storedProductiveTimeSeconds") ?? 0;
+    storedTotalFreeTimeSeconds =
+        prefs.getInt("storedTotalFreeTimeSeconds") ?? 0;
+    storedTotalProductiveTimeSeconds =
+        prefs.getInt("storedTotalProductiveTimeSeconds") ?? 0;
+
+    print("✅ Loaded stored time values at app start:");
+    print(
+        "Free Time: $storedFreeTimeSeconds, Productive Time: $storedProductiveTimeSeconds");
+    print(
+        "Total Free Time: $storedTotalFreeTimeSeconds, Total Productive Time: $storedTotalProductiveTimeSeconds");
   }
 
   int getTotalSecondsFromTime(
@@ -669,6 +694,7 @@ class _MainFrameState extends State<MainFrame>
         _freeTimeInterval.isActive && state == AppLifecycleState.paused) {
       // Save the current time when the app is paused
       _saveCurrentTime();
+      _saveCounterVariables();
       _brakeStop();
     } else if (brake == true && state == AppLifecycleState.resumed) {
       // Calculate the elapsed time and update the timer when the app is resumed
